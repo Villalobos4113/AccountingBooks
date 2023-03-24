@@ -10,11 +10,14 @@ import pickle
 
 
 def read_file() -> list[Exercise]:
+    print("\nOpening database")
     try:
         with open(database_path + "/database.pickle", "rb") as f:
             lst = pickle.load(f)
+            print("  lst[Exercise] loaded correctly from database.\n")
     except Exception:
         lst = []
+        print("  database couldn't be opened\n")
 
     return lst
 
@@ -41,9 +44,14 @@ class Accounting(ctk.CTk):
         exercises_frame = Exercises(self, exercises=self.exercises, company_name=self.company_name)
         exercises_frame.pack(padx=20, pady=20)
 
+        print("\nAccounting created successfully:")
+        print("  company name: ", self.company_name)
+        print("  exercises: ", self.exercises, "\n")
+
     def save(self):
         with open(database_path + "/database.pickle", "wb") as f:
             pickle.dump(self.exercises, f)
+            print("\nDatabase saved successfully\n")
         self.destroy()
 
 
@@ -103,6 +111,11 @@ class Exercises(ctk.CTkFrame):
 
                 column += 1
 
+        print("\nExercises created successfully:")
+        print("  company name: ", self.company_name)
+        print("  exercises: ", self.exercises)
+        print("  window: ", self.window)
+
     def show_exercise_book(self, exercise: Exercise):
         exercise_book_frame = ExerciseBook(self.window, exercise=exercise, exercises=self.exercises, company_name=self.company_name, window=self.window)
         self.destroy()
@@ -150,6 +163,12 @@ class ExerciseBook(ctk.CTkFrame):
 
         self.exit_button = ctk.CTkButton(self, text="Exit", command=self.exit)
         self.exit_button.grid(row=1, column=3, padx=19, pady=15)
+
+        print("\nExerciseBook created successfully:")
+        print("  company name: ", self.company_name)
+        print("  exercise: ", self.exercise.name)
+        print("  exercises: ", self.exercises)
+        print("  window: ", self.window, "\n")
 
     def add_policy(self):
         add_policy_frame = AddPolicy(self, exercise=self.exercise)
@@ -233,9 +252,13 @@ class AddPolicy(ctk.CTkFrame):
         self.add_policy_button = ctk.CTkButton(self, text="Add Policy", width=500, command=self.add_policy)
         self.add_policy_button.grid(row=5, column=0, columnspan=8, padx=20, pady=(30, 30))
 
+        print("\nAddPolicy created successfully:")
+        print("  exercise: ", self.exercise.name, "\n")
+
     def add_policy(self):
         try:
             if self.description_entry.get() == "":
+                print()
                 raise Exception("Description entry is empty.")
 
             if self.credit_entry.get() == "":
@@ -284,6 +307,7 @@ class AddPolicy(ctk.CTkFrame):
             self.debit_account_entry.set("")
 
             messagebox.showinfo(title="Success", message="Policy added successfully.")
+            print("Policy added successfully: ", policy, "\n")
 
         except Exception as e:
             messagebox.showwarning(title="Add Policy Warning", message=str(e))
@@ -314,6 +338,9 @@ class AddAccount(ctk.CTkFrame):
         self.add_account_button = ctk.CTkButton(self, text="Add Account", width=500, command=self.add_account)
         self.add_account_button.grid(row=3, column=0, columnspan=8, padx=20, pady=(30, 30))
 
+        print("\nAddAccount created successfully:")
+        print("  exercise: ", self.exercise.name, "\n")
+
     def add_account(self):
         try:
             if self.account_id_entry.get() == "":
@@ -332,6 +359,7 @@ class AddAccount(ctk.CTkFrame):
             self.name_entry.delete(0, len(self.name_entry.get()))
 
             messagebox.showinfo(title="Success", message="Account added successfully")
+            print("\nAccount added successfully: ", self.exercise.get_all_accounts()[-1], "\n")
 
         except Exception as e:
             messagebox.showwarning(title="Add Account Warning", message=str(e))
