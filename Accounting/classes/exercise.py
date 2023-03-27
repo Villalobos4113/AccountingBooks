@@ -1,6 +1,6 @@
 from Accounting.classes.policy import Policy
-from Accounting.classes.account import Account
 from Accounting.classes.statement import Statement
+from Accounting.classes.account_movement import AccountMovement
 
 from datetime import datetime
 from copy import deepcopy
@@ -144,7 +144,7 @@ class Exercise:
         if id_account < 1 or id_account > 5:
             raise Exception("ERROR: Account ID '" + str(account_id) + "' doesn't belong to any any statement")
 
-        self._statements[id_account - 1].accounts = Account(account_id, name)
+        self._statements[id_account - 1].add_account(account_id, name)
 
     def next_policy_invoice(self) -> int:
         return len(self._policies) + 1
@@ -157,3 +157,86 @@ class Exercise:
                 lst.append(str(account))
 
         return lst
+
+    def check_accounting_equation(self) -> bool:
+        return self._statements[0].balance() == (self._statements[1].balance() + self._statements[2].balance() + self._statements[3].balance() - self._statements[4].balance())
+
+    def balance_sheet(self) -> str:
+        bal_assets = self._statements[0].balance()
+        bal_liabilities = self._statements[1].balance()
+        bal_common_stock = self._statements[2].balance()
+        bal_revenue = self._statements[3].balance()
+        bal_expenses = self._statements[4].balance()
+
+        res = "=" * 29 + "EXERCISE" + "=" * 29 + "\n"
+        res += f"  Company Name: {self._company_name}\n"
+        res += f"  Name: {self._name}\n"
+        res += f"  Exercise: {self._exercise.strftime('%Y')}\n\n"
+        res += f"    Assets                          {'-' if bal_assets < 0 else ''}${abs(bal_assets)}\n"
+        res += f"    Expenses                     {'-' if bal_expenses < 0 else ''}${abs(bal_expenses)}\n"
+        res += f"      Liabilities                                          {'-' if bal_liabilities < 0 else ''}${abs(bal_liabilities)}\n"
+        res += f"      Common Stock                                {'-' if bal_common_stock < 0 else ''}${abs(bal_common_stock)}\n"
+        res += f"      Revenue                                            {'-' if bal_revenue < 0 else ''}${abs(bal_revenue)}\n\n"
+        res += f"                                         {'-' if bal_assets + bal_expenses < 0 else ''}${abs(bal_assets + bal_expenses)}\n"
+        res += f"                                                                {'-' if bal_liabilities + bal_common_stock + bal_revenue < 0 else ''}${abs(bal_liabilities + bal_common_stock + bal_revenue)}\n"
+        res += "=" * 66
+
+        return res
+
+    def income_statement(self) -> str:
+        bal_revenue = self._statements[3].balance()
+        bal_expenses = self._statements[4].balance()
+        bal_utilities = bal_revenue - bal_expenses
+
+        res = "=" * 29 + "EXERCISE" + "=" * 29 + "\n"
+        res += f"  Company Name: {self._company_name}\n"
+        res += f"  Name: {self._name}\n"
+        res += f"  Exercise: {self._exercise.strftime('%Y')}\n\n"
+        res += f"    Revenue                       {'-' if bal_revenue < 0 else ''}${abs(bal_revenue)}\n"
+        res += f"      Expenses                                          {'-' if bal_expenses < 0 else ''}${abs(bal_expenses)}\n\n"
+        res += f"    {'  ' if bal_utilities < 0 else ''}Operating Income{'                            ' if bal_utilities < 0 else '       '}${abs(bal_utilities)}\n"
+        res += "=" * 66
+
+        return res
+
+    def close_book(self) -> dict[str: int]:
+        try:
+            self._statements[2].add_account(300100, "Retained Earnings")
+        except Exception:
+            pass
+
+        revenue_bal = 0
+        expenses_bal = 0
+
+        for account in self._statements[3].accounts.values():
+            account_balance = account.balance()
+
+            policy = Policy(self.next_policy_invoice(), f"Closing revenue account '{account.name}'.")
+            policy.debit = AccountMovement(account.account_id, account_balance.quantity, "d")
+            policy.credit = AccountMovement(300100, account_balance.quantity, "c")
+            self.policies = policy
+
+            revenue_bal += account_balance.quantity
+
+        for account in self._statements[4].accounts.values():
+            account_balance = account.balance()
+
+            policy = Policy(self.next_policy_invoice(), f"Closing expenses account '{account.name}'.")
+            policy.debit = AccountMovement(300100, account_balance.quantity, "d")
+            policy.credit = AccountMovement(account.account_id, account_balance.quantity, "c")
+            self.policies = policy
+
+            expenses_bal += account_balance.quantity
+
+        income_tax = 0.3 * (revenue_bal - expenses_bal)
+
+        if income_tax > 0:
+            try:
+                self._statements[1].add_account(200100, "Income Tax Payable")
+            except Exception:
+                pass
+
+            policy = Policy(self.next_policy_invoice(), "Income Tax Payable of Exercise.")
+            policy.debit = AccountMovement(300100, income_tax, "d")
+            policy.credit = AccountMovement(200100, income_tax, "c")
+            self.policies = policy

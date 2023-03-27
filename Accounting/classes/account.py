@@ -38,16 +38,20 @@ class Account:
             Raises exception if credit balance and debit balance don't match or credit and debit accounts are the same.
     """
 
-    def __init__(self, account_id: int, name: str):
+    def __init__(self, account_id: int, name: str, nature: str):
         self._account_id = account_id
         self._name = name
-        self._credits: [AccountMovement] = []
-        self._debits: [AccountMovement] = []
+        self._nature = nature.upper()
+        self._credits: list[AccountMovement] = []
+        self._debits: list[AccountMovement] = []
 
     def __str__(self) -> str:
+        bal = self.balance()
+
         res = "=" * 27 + "ACCOUNT" + "=" * 27 + "\n"
         res += f"  Name: {self._name}\n"
-        res += f"  ID:   {self._account_id}\n"
+        res += f"  ID: {self._account_id}\n"
+        res += f"  Balance: {'-' if bal.d_c != self._nature else ''}${bal.quantity}\n"
         res += f"  Credits:\n" if len(self._credits) > 0 else ""
 
         for credit in self._credits:
@@ -99,3 +103,20 @@ class Account:
             self._debits.append(account_movement)
         else:
             raise Exception("ERROR: AccountMovement's account id doesn't match self account id.")
+
+    def balance(self) -> AccountMovement:
+        credit_balance = 0
+        debit_balance = 0
+
+        for credit in self._credits:
+            credit_balance += credit.quantity
+
+        for debit in self._debits:
+            debit_balance += debit.quantity
+
+        if credit_balance > debit_balance:
+            return AccountMovement(000000, credit_balance - debit_balance, "C")
+        elif debit_balance > credit_balance:
+            return AccountMovement(000000, debit_balance - credit_balance, "D")
+        else:
+            return AccountMovement(000000, debit_balance - credit_balance, self._nature)

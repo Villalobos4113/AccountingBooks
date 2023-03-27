@@ -56,12 +56,13 @@ class Policy:
 
     def __str__(self) -> str:
         res = "=" * 27 + "POLICY" + "=" * 27 + "\n"
-        res += f"  Invoice:      {self._invoice}\n"
+        res += f"  Invoice: {self._invoice}\n"
         res += f"  Description: \"{self._description}\"\n"
-        res += f"  Date:         {self._date.strftime('%A')} {self._date.strftime('%B')} {self._date.strftime('%d')} {self._date.strftime('%Y')}\n"
+        res += f"  Date: {self._date.strftime('%A')} {self._date.strftime('%B')} {self._date.strftime('%d')} {self._date.strftime('%Y')}\n"
         res += f"  Movements:\n"
-        res += f"    {self._credit}\n"
-        res += f"    {self._debit}\n"
+        res += f"      {self._debit}\n"
+        res += f"        {self._credit}\n"
+
         res += "=" * 60
         return res
 

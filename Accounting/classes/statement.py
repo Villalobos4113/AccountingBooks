@@ -40,14 +40,16 @@ class Statement:
     def __init__(self, name: str, nature: str):
         self._name = name
         self._nature = nature.upper()
-        self._accounts: dict[int: Account] = {}
+        self._accounts: dict[int, Account] = {}
 
     def __str__(self) -> str:
         keys = sorted(self._accounts.keys())
+        bal = self.balance()
 
         res = "=" * 27 + "STATEMENT" + "=" * 27 + "\n"
-        res += f"  Name:   {self._name}\n"
+        res += f"  Name: {self._name}\n"
         res += f"  Nature: {'Debtor' if self._nature == 'D' else 'Creditor'}\n"
+        res += f"  Balance: {'-' if bal < 0 else ''}${abs(bal)}\n"
         res += f"  Accounts:\n" if len(keys) > 0 else ""
 
         for key in keys:
@@ -77,12 +79,11 @@ class Statement:
     def accounts(self) -> dict[int: Account]:
         return self._accounts.copy()
 
-    @accounts.setter
-    def accounts(self, account: Account) -> None:
-        if account.account_id in self._accounts:
+    def add_account(self, account_id: int, name: str) -> None:
+        if account_id in self._accounts:
             raise Exception("ERROR: Account ID already exists.")
 
-        self._accounts[account.account_id] = account
+        self._accounts[account_id] = Account(account_id, name, self._nature)
 
     def account_movement(self, account_movement: AccountMovement) -> None:
         if account_movement.account_id not in self._accounts:
@@ -96,3 +97,16 @@ class Statement:
 
         else:
             raise Exception("ERROR: Account Movement d_c's '" + account_movement.d_c + "' isn't a valid type.")
+
+    def balance(self) -> int:
+        res = 0
+
+        for account in self._accounts.values():
+            account_balance = account.balance()
+
+            if account_balance.d_c == self._nature:
+                res += account_balance.quantity
+            else:
+                res -= account_balance.quantity
+
+        return res
