@@ -4,7 +4,6 @@ from Accounting.classes.exercise import Exercise
 
 from Accounting.settings import database_path
 
-import tkinter as tk
 from tkinter import messagebox
 import customtkinter as ctk
 import pickle
@@ -209,11 +208,6 @@ class ExerciseBook(ctk.CTkFrame):
 
         self.actual_frame = close_book_frame
         self.actual_frame.grid(row=2, column=0, padx=20, pady=20, columnspan=5)
-
-    def exit(self):
-        exercises_frame = Exercises(self.window, exercises=self.exercises, company_name=self.company_name)
-        self.destroy()
-        exercises_frame.pack(padx=20, pady=20)
 
     def exit(self):
         exercises_frame = Exercises(self.window, exercises=self.exercises, company_name=self.company_name)
